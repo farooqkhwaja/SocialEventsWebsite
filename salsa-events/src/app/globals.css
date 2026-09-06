@@ -1,0 +1,200 @@
+@import "tailwindcss";
+
+/*
+  Design tokens for the group event board.
+
+  Two palettes share the same variable names: a warm light "paper" theme
+  (default) and a near-black "dark" theme, toggled by adding/removing the
+  `dark` class on <html> (see ThemeToggle + the inline script in
+  layout.tsx). Every component references the semantic variable names
+  below, so neither palette needs any component-level changes.
+
+  Note: --color-paper doubles as the button-text color on filled accent
+  buttons (e.g. bg-accent text-paper) in both themes -- it works because
+  each theme's accent colors are tuned against its own paper tone (dark
+  accents + near-white paper in light mode, bright accents + near-black
+  paper in dark mode).
+*/
+:root {
+  --color-paper: #faf8f4;
+  --color-surface: #ffffff;
+  --color-ink: #221b17;
+  --color-muted: #6e6259;
+  --color-border: #ebe3d6;
+  --color-border-strong: #d9cdb9;
+
+  /* Primary accent -- buttons, active filters, links, key actions. */
+  --color-accent: #a8324b;
+  --color-accent-strong: #8a2740;
+  --color-accent-soft: #f6e4e8;
+
+  /* Pinned events. */
+  --color-gold: #a97d1f;
+  --color-gold-soft: #f6edd7;
+
+  /* Attendance status. */
+  --color-going: #3f7a52;
+  --color-going-soft: #e4f0e7;
+  --color-maybe: #ad7a22;
+  --color-maybe-soft: #f5ecd9;
+  --color-cancelled: #9b4a46;
+  --color-cancelled-soft: #f3e4e2;
+
+  /* Event type accents. */
+  --color-type-salsa: #c1502e;
+  --color-type-salsa-soft: #f5e2d9;
+  --color-type-bachata: #b14c77;
+  --color-type-bachata-soft: #f5e1eb;
+  --color-type-blend: #6e5a9e;
+  --color-type-blend-soft: #e9e3f5;
+  --color-type-other: #5b6b73;
+  --color-type-other-soft: #e4e9ea;
+
+  /* Deterministic per-event accent palette (item-level color, not tied to event type). */
+  --color-palette-blue: #3b6fa8;
+  --color-palette-blue-soft: #e7eef8;
+  --color-palette-purple: #7a5fb0;
+  --color-palette-purple-soft: #ede7f8;
+  --color-palette-pink: #b1508f;
+  --color-palette-pink-soft: #f8e6f0;
+  --color-palette-green: #3f7a4d;
+  --color-palette-green-soft: #e6f3ea;
+  --color-palette-orange: #a85f21;
+  --color-palette-orange-soft: #f7ebdc;
+  --color-palette-yellow: #877318;
+  --color-palette-yellow-soft: #f5f1d9;
+  --color-palette-teal: #267d77;
+  --color-palette-teal-soft: #e2f3f1;
+}
+
+.dark {
+  --color-paper: #17141a;
+  --color-surface: #221d27;
+  --color-ink: #f4eee6;
+  --color-muted: #b7a99c;
+  --color-border: #352d3a;
+  --color-border-strong: #4a3f50;
+
+  --color-accent: #e15a76;
+  --color-accent-strong: #ff7b93;
+  --color-accent-soft: #3a1f28;
+
+  --color-gold: #e0b039;
+  --color-gold-soft: #3a2f16;
+
+  --color-going: #5cc98a;
+  --color-going-soft: #17301f;
+  --color-maybe: #e0a83e;
+  --color-maybe-soft: #3a2c12;
+  --color-cancelled: #e2685a;
+  --color-cancelled-soft: #3a2119;
+
+  --color-type-salsa: #f0844f;
+  --color-type-salsa-soft: #3c2818;
+  --color-type-bachata: #e874aa;
+  --color-type-bachata-soft: #3a2333;
+  --color-type-blend: #a58bef;
+  --color-type-blend-soft: #2b2540;
+  --color-type-other: #7fb0c2;
+  --color-type-other-soft: #1f2e33;
+
+  --color-palette-blue: #7fb3e8;
+  --color-palette-blue-soft: #16283a;
+  --color-palette-purple: #b39cf0;
+  --color-palette-purple-soft: #271f3d;
+  --color-palette-pink: #e08fc4;
+  --color-palette-pink-soft: #3a2333;
+  --color-palette-green: #6ed69a;
+  --color-palette-green-soft: #163823;
+  --color-palette-orange: #f2985a;
+  --color-palette-orange-soft: #3d2c17;
+  --color-palette-yellow: #d9c94a;
+  --color-palette-yellow-soft: #3a3512;
+  --color-palette-teal: #5cd6cb;
+  --color-palette-teal-soft: #163430;
+}
+
+@theme inline {
+  --color-paper: var(--color-paper);
+  --color-surface: var(--color-surface);
+  --color-ink: var(--color-ink);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-accent: var(--color-accent);
+  --color-accent-strong: var(--color-accent-strong);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-gold: var(--color-gold);
+  --color-gold-soft: var(--color-gold-soft);
+  --color-going: var(--color-going);
+  --color-going-soft: var(--color-going-soft);
+  --color-maybe: var(--color-maybe);
+  --color-maybe-soft: var(--color-maybe-soft);
+  --color-cancelled: var(--color-cancelled);
+  --color-cancelled-soft: var(--color-cancelled-soft);
+  --color-type-salsa: var(--color-type-salsa);
+  --color-type-salsa-soft: var(--color-type-salsa-soft);
+  --color-type-bachata: var(--color-type-bachata);
+  --color-type-bachata-soft: var(--color-type-bachata-soft);
+  --color-type-blend: var(--color-type-blend);
+  --color-type-blend-soft: var(--color-type-blend-soft);
+  --color-type-other: var(--color-type-other);
+  --color-type-other-soft: var(--color-type-other-soft);
+  --color-palette-blue: var(--color-palette-blue);
+  --color-palette-blue-soft: var(--color-palette-blue-soft);
+  --color-palette-purple: var(--color-palette-purple);
+  --color-palette-purple-soft: var(--color-palette-purple-soft);
+  --color-palette-pink: var(--color-palette-pink);
+  --color-palette-pink-soft: var(--color-palette-pink-soft);
+  --color-palette-green: var(--color-palette-green);
+  --color-palette-green-soft: var(--color-palette-green-soft);
+  --color-palette-orange: var(--color-palette-orange);
+  --color-palette-orange-soft: var(--color-palette-orange-soft);
+  --color-palette-yellow: var(--color-palette-yellow);
+  --color-palette-yellow-soft: var(--color-palette-yellow-soft);
+  --color-palette-teal: var(--color-palette-teal);
+  --color-palette-teal-soft: var(--color-palette-teal-soft);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+}
+
+:root {
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
