@@ -23,6 +23,7 @@ export default function Home() {
     toggleStatusFor,
     deleteEventFor,
     submitAttendanceFor,
+    removeAttendanceFor,
   } = useEvents();
 
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
@@ -85,6 +86,7 @@ export default function Home() {
         onToggleStatus={toggleStatusFor}
         onDelete={handleDelete}
         onAttendance={submitAttendanceFor}
+        onRemoveAttendance={removeAttendanceFor}
       />
     );
   }

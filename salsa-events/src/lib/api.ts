@@ -72,6 +72,16 @@ export async function submitAttendance(
   return body.event;
 }
 
+export async function removeAttendance(id: string, attendeeId: string): Promise<EventDoc> {
+  const res = await fetch(`/api/events/${id}/attendance`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ attendeeId }),
+  });
+  const body = await parseResponse<{ event: EventDoc }>(res);
+  return body.event;
+}
+
 export async function deleteEvent(id: string): Promise<void> {
   const res = await fetch(`/api/events/${id}`, { method: "DELETE" });
   await parseResponse<{ success: boolean }>(res);

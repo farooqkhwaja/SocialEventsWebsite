@@ -62,3 +62,35 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  try {
+    const { id } = await params;
+    const body = await request.json().catch(() => ({}));
+    const attendeeId = typeof body.attendeeId === "string" ? body.attendeeId.trim() : "";
+
+    if (!attendeeId) {
+      return NextResponse.json({ error: "Missing attendee identifier." }, { status: 400 });
+    }
+
+    await connectToDatabase();
+    const event = await EventModel.findById(id);
+
+    if (!event) {
+      return NextResponse.json({ error: "Event not found." }, { status: 404 });
+    }
+
+    // Removing the attendee entry entirely -- this is what lets someone
+    // fully deactivate their attendance rather than just changing status.
+    event.attendees = event.attendees.filter((a) => a.id !== attendeeId) as typeof event.attendees;
+    await event.save();
+
+    return NextResponse.json({ event: serializeEvent(event) });
+  } catch (error) {
+    console.error("DELETE /api/events/[id]/attendance failed", error);
+    return NextResponse.json(
+      { error: "Could not remove your attendance. Please try again." },
+      { status: 500 }
+    );
+  }
+}

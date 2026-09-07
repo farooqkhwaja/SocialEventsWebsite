@@ -11,6 +11,7 @@ import {
 interface AttendanceControlsProps {
   event: EventDoc;
   onSubmit: (status: AttendanceStatus, name: string) => Promise<void>;
+  onRemove: () => Promise<void>;
 }
 
 const OPTIONS: { status: AttendanceStatus; label: string }[] = [
@@ -37,7 +38,7 @@ const CONFIRM_COLOR: Record<AttendanceStatus, string> = {
   not_going: "text-cancelled",
 };
 
-export function AttendanceControls({ event, onSubmit }: AttendanceControlsProps) {
+export function AttendanceControls({ event, onSubmit, onRemove }: AttendanceControlsProps) {
   const [pendingStatus, setPendingStatus] = useState<AttendanceStatus | null>(null);
   const [nameDraft, setNameDraft] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -48,6 +49,11 @@ export function AttendanceControls({ event, onSubmit }: AttendanceControlsProps)
 
   function handleChoose(status: AttendanceStatus) {
     setError(null);
+    if (mine?.status === status) {
+      // Clicking the already-active status deactivates attendance entirely.
+      void doRemove();
+      return;
+    }
     const knownName = getLocalAttendeeName();
     if (knownName) {
       void doSubmit(status, knownName);
@@ -71,13 +77,25 @@ export function AttendanceControls({ event, onSubmit }: AttendanceControlsProps)
     }
   }
 
+  async function doRemove() {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await onRemove();
+    } catch {
+      setError("Could not update your response. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   function handleNameConfirm() {
     const trimmed = nameDraft.trim();
     if (!trimmed || !pendingStatus) return;
     void doSubmit(pendingStatus, trimmed);
   }
 
-     if (pendingStatus) {
+  if (pendingStatus) {
     return (
       <div className="space-y-2 rounded-xl border border-border-strong bg-surface p-2.5">
         <div>

@@ -7,6 +7,7 @@ import {
   createEvent,
   deleteEvent,
   fetchEvents,
+  removeAttendance,
   setEventStatus,
   submitAttendance,
   togglePin,
@@ -100,6 +101,11 @@ export function useEvents() {
     upsertLocal(updated);
   }
 
+  async function removeAttendanceFor(event: EventDoc) {
+    const updated = await removeAttendance(event._id, getLocalAttendeeId());
+    upsertLocal(updated);
+  }
+
   return {
     events,
     loading,
@@ -110,5 +116,6 @@ export function useEvents() {
     toggleStatusFor,
     deleteEventFor,
     submitAttendanceFor,
+    removeAttendanceFor,
   };
 }

@@ -113,17 +113,22 @@ function isIOS(): boolean {
 
 /** Triggers an .ics download/open in a way that works on iOS Safari and desktop browsers. */
 export function downloadIcsFile(filename: string, content: string): void {
+  const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
   if (isIOS()) {
-    // The `download` attribute is not supported on iOS Safari. Navigating
-    // directly to a text/calendar data URI is what lets iOS present its
-    // native "Add to Calendar" sheet instead.
-    const dataUri = `data:text/calendar;charset=utf-8,${encodeURIComponent(content)}`;
-    window.location.href = dataUri;
+    // iOS Safari doesn't support the `download` attribute, and data: URIs
+    // for text/calendar are unreliable there (often silently do nothing).
+    // Opening the object URL directly lets Safari recognize the
+    // text/calendar content type and hand off to Calendar.app.
+    const opened = window.open(url, "_blank");
+    if (!opened) {
+      window.location.href = url;
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
     return;
   }
 
-  const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
