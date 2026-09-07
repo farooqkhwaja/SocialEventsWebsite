@@ -10,24 +10,26 @@ interface AppHeaderProps {
 
 export function AppHeader({ onAddEvent, onRenamed }: AppHeaderProps) {
   return (
-    <header className="mb-6 space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl text-ink sm:text-3xl">Salsa &amp; Bachata Events</h1>
-          <p className="text-sm text-muted">Our group&apos;s shared event calendar</p>
+    <header className="mb-5 space-y-2">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-display text-xl text-ink sm:text-2xl">Salsa &amp; Bachata Events</h1>
+          <p className="text-xs text-muted sm:text-sm">Our group&apos;s shared event calendar</p>
         </div>
         <ThemeToggle />
       </div>
 
-      <button
-        type="button"
-        onClick={onAddEvent}
-        className="min-h-[2.75rem] w-full rounded-xl bg-accent px-4 py-2 text-sm font-medium text-paper shadow-sm active:bg-accent-strong sm:w-auto"
-      >
-        Add event
-      </button>
-
-      <NameSettings onRenamed={onRenamed} />
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <NameSettings onRenamed={onRenamed} />
+        <button
+          type="button"
+          onClick={onAddEvent}
+          className="min-h-[2.5rem] shrink-0 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-paper shadow-sm active:bg-accent-strong"
+        >
+          Add event
+        </button>
+      </div>
     </header>
   );
 }
+

@@ -45,10 +45,14 @@ export function NameSettings({ onRenamed }: NameSettingsProps) {
     setEditing(false);
   }
 
-  if (editing) {
+   if (editing) {
     return (
-      <div className="flex flex-wrap items-center gap-2 text-sm">
+      <div className="w-full max-w-xs space-y-2">
+        <label htmlFor="attendee-name" className="sr-only">
+          Your name
+        </label>
         <input
+          id="attendee-name"
           type="text"
           autoFocus
           value={draft}
@@ -58,30 +62,32 @@ export function NameSettings({ onRenamed }: NameSettingsProps) {
             if (e.key === "Escape") setEditing(false);
           }}
           placeholder="Your name"
-          className="min-h-[2.25rem] rounded-lg border border-border-strong bg-paper px-3 py-1 text-sm text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
+          className="min-h-[2.25rem] w-full min-w-0 rounded-lg border border-border-strong bg-paper px-3 py-1 text-sm text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent"
         />
-        <button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={!draft.trim() || saving}
-          className="min-h-[2.25rem] rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-paper disabled:opacity-50"
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={() => setEditing(false)}
-          className="min-h-[2.25rem] rounded-lg px-2 py-1.5 text-sm text-muted"
-        >
-          Cancel
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={!draft.trim() || saving}
+            className="min-h-[2.25rem] flex-1 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-paper disabled:opacity-50 sm:flex-none"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            className="min-h-[2.25rem] rounded-lg px-2 py-1.5 text-sm text-muted"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <p className="text-sm text-muted">
-      {name ? `Your name: ${name}` : "You haven't set a name yet."}{" "}
+    <p className="text-xs text-muted sm:text-sm">
+      {name ? `Your name: ${name}` : "No name set yet"}{" "}
       <button
         type="button"
         onClick={() => {
@@ -90,7 +96,7 @@ export function NameSettings({ onRenamed }: NameSettingsProps) {
         }}
         className="font-medium text-accent underline underline-offset-2"
       >
-        Change name
+        Change
       </button>
     </p>
   );

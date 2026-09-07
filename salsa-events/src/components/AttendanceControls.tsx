@@ -77,40 +77,44 @@ export function AttendanceControls({ event, onSubmit }: AttendanceControlsProps)
     void doSubmit(pendingStatus, trimmed);
   }
 
-  if (pendingStatus) {
+     if (pendingStatus) {
     return (
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border-strong bg-surface p-2.5">
-        <label htmlFor={`name-${event._id}`} className="text-sm text-muted">
-          Your name
-        </label>
-        <input
-          id={`name-${event._id}`}
-          type="text"
-          autoFocus
-          value={nameDraft}
-          onChange={(e) => setNameDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleNameConfirm();
-            if (e.key === "Escape") setPendingStatus(null);
-          }}
-          placeholder="e.g. Sarah"
-          className="min-h-[2.5rem] min-w-0 flex-1 rounded-lg border border-border bg-paper px-3 py-1.5 text-base text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent sm:text-sm"
-        />
-        <button
-          type="button"
-          onClick={handleNameConfirm}
-          disabled={!nameDraft.trim() || submitting}
-          className="min-h-[2.5rem] rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-paper disabled:opacity-50"
-        >
-          Confirm
-        </button>
-        <button
-          type="button"
-          onClick={() => setPendingStatus(null)}
-          className="min-h-[2.5rem] rounded-lg px-3 py-1.5 text-sm text-muted"
-        >
-          Cancel
-        </button>
+      <div className="space-y-2 rounded-xl border border-border-strong bg-surface p-2.5">
+        <div>
+          <label htmlFor={`name-${event._id}`} className="mb-1 block text-sm text-muted">
+            Your name
+          </label>
+          <input
+            id={`name-${event._id}`}
+            type="text"
+            autoFocus
+            value={nameDraft}
+            onChange={(e) => setNameDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleNameConfirm();
+              if (e.key === "Escape") setPendingStatus(null);
+            }}
+            placeholder="e.g. Sarah"
+            className="min-h-[2.5rem] w-full min-w-0 rounded-lg border border-border bg-paper px-3 py-1.5 text-base text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent sm:text-sm"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleNameConfirm}
+            disabled={!nameDraft.trim() || submitting}
+            className="min-h-[2.5rem] flex-1 rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-paper disabled:opacity-50 sm:flex-none"
+          >
+            Confirm
+          </button>
+          <button
+            type="button"
+            onClick={() => setPendingStatus(null)}
+            className="min-h-[2.5rem] rounded-lg px-3 py-1.5 text-sm text-muted"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     );
   }
