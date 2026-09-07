@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "seed-events": "tsx scripts/seed-events.ts"
   },
   "dependencies": {
     "mongodb": "^7.6.0",
