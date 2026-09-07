@@ -23,13 +23,13 @@ const TYPE_OPTIONS: { value: TypeFilter; label: string }[] = [
 export function Filters({ activeType, onTypeChange, search, onSearchChange }: FiltersProps) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-2">
+      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
         {TYPE_OPTIONS.map((opt) => (
           <button
             key={opt.value}
             type="button"
             onClick={() => onTypeChange(opt.value)}
-            className={`min-h-[2.5rem] rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+            className={`min-h-[2.5rem] shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
               activeType === opt.value
                 ? "border-accent bg-accent text-paper shadow-sm"
                 : "border-border-strong bg-surface text-ink active:bg-paper"
@@ -39,6 +39,7 @@ export function Filters({ activeType, onTypeChange, search, onSearchChange }: Fi
           </button>
         ))}
       </div>
+      
       <input
         type="search"
         value={search}

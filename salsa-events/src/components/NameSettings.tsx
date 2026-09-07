@@ -47,7 +47,7 @@ export function NameSettings({ onRenamed }: NameSettingsProps) {
 
    if (editing) {
     return (
-      <div className="w-full max-w-xs space-y-2">
+     <div className="w-full space-y-2">
         <label htmlFor="attendee-name" className="sr-only">
           Your name
         </label>

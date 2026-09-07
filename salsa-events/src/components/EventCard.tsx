@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { AttendanceStatus, EventDoc } from "@/types/event";
 import { EVENT_TYPE_COLOR_CLASSES, EVENT_TYPE_LABELS } from "@/types/event";
 import { friendlyDateLabel, formatShortDate } from "@/lib/date";
@@ -45,8 +46,22 @@ export function EventCard({
 }: EventCardProps) {
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+
+  // The expanded panel now stays mounted (for the CSS height/opacity
+  // animation) instead of unmounting on collapse, so any open menu/dialog
+  // needs to be explicitly reset when the card collapses.
+  useEffect(() => {
+    if (!expanded) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMenuOpen(false);
+      setConfirmingCancel(false);
+      setConfirmingDelete(false);
+    }
+  }, [expanded]);
 
   const cancelled = event.status === "cancelled";
   const { eyebrow, detail } = friendlyDateLabel(event.date, event.startTime, event.endTime);
@@ -94,7 +109,7 @@ export function EventCard({
 
   return (
     <article
-       className={`rounded-2xl border ${palette.border} ${palette.bg} shadow-sm ${
+      className={`rounded-2xl border ${palette.border} ${palette.bg} shadow-sm ${
         cancelled ? "opacity-80" : ""
       }`}
     >
@@ -130,148 +145,172 @@ export function EventCard({
         </span>
       </button>
 
-      {expanded && (
-        <div className="rounded-b-2xl border-t border-border bg-surface p-4 sm:p-5">
-          <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-            <span
-              className={`rounded-full border px-2 py-0.5 text-xs font-medium ${EVENT_TYPE_COLOR_CLASSES[event.type]}`}
-            >
-              {EVENT_TYPE_LABELS[event.type]}
-            </span>
-          </div>
-
-          <div className="text-sm">
-            <p className="font-medium text-ink">
-              {eyebrow} <span className="text-muted font-normal">· {detail}</span>
-            </p>
-            <p className="text-muted">
-              {event.location}
-              {event.address ? `, ${event.address}` : ""}
-            </p>
-            {event.price && <p className="text-muted">Price: {event.price}</p>}
-            {event.url && (
-              <a
-                href={event.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-accent underline underline-offset-2 break-words"
+      <div
+        className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+          expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div
+            className={`rounded-b-2xl border-t border-border bg-surface p-4 transition-opacity duration-300 ease-out sm:p-5 ${
+              expanded ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+              <span
+                className={`rounded-full border px-2 py-0.5 text-xs font-medium ${EVENT_TYPE_COLOR_CLASSES[event.type]}`}
               >
-                {event.url}
-              </a>
-            )}
-            {event.description && (
-              <p className="mt-2 text-ink/90 whitespace-pre-wrap">{event.description}</p>
-            )}
-          </div>
+                {EVENT_TYPE_LABELS[event.type]}
+              </span>
+            </div>
 
-          <div className="mt-4 space-y-2 rounded-xl border border-border bg-paper/60 p-3">
-            <p className="text-sm">
-              <span className="font-medium text-going">Going: {going.length}</span>
-              <span className="text-muted"> &middot; </span>
-              <span className="font-medium text-maybe">Maybe: {maybe.length}</span>
-              {notGoing.length > 0 && (
-                <>
-                  <span className="text-muted"> &middot; </span>
-                  <span className="font-medium text-cancelled">Not going: {notGoing.length}</span>
-                </>
+            <div className="text-sm">
+              <p className="font-medium text-ink">
+                {eyebrow} <span className="text-muted font-normal">· {detail}</span>
+              </p>
+              <p className="text-muted">
+                {event.location}
+                {event.address ? `, ${event.address}` : ""}
+              </p>
+              {event.price && <p className="text-muted">Price: {event.price}</p>}
+              {event.url && (
+                <a
+                  href={event.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent underline underline-offset-2 break-words"
+                >
+                  {event.url}
+                </a>
               )}
-            </p>
-            {going.length > 0 && (
-              <p className="text-sm text-ink">{attendeePreview(going.map((a) => a.name))}</p>
-            )}
+              {event.description && (
+                <p className="mt-2 text-ink/90 whitespace-pre-wrap">{event.description}</p>
+              )}
+            </div>
 
-            <AttendanceControls
-              event={event}
-              onSubmit={(status, name) => onAttendance(event, status, name)}
-            />
-          </div>
+            <div className="mt-4 space-y-2 rounded-xl border border-border bg-paper/60 p-3">
+              <p className="text-sm">
+                <span className="font-medium text-going">Going: {going.length}</span>
+                <span className="text-muted"> &middot; </span>
+                <span className="font-medium text-maybe">Maybe: {maybe.length}</span>
+                {notGoing.length > 0 && (
+                  <>
+                    <span className="text-muted"> &middot; </span>
+                    <span className="font-medium text-cancelled">Not going: {notGoing.length}</span>
+                  </>
+                )}
+              </p>
+              {going.length > 0 && (
+                <p className="text-sm text-ink">{attendeePreview(going.map((a) => a.name))}</p>
+              )}
 
-          <div className="relative mt-4 flex flex-wrap gap-2 border-t border-border pt-3.5">
-            <button
-              type="button"
-              onClick={handleShare}
-              className={`${actionButtonClass} border-accent text-accent active:bg-accent-soft`}
-            >
-              Share
-            </button>
-            <button
-              type="button"
-              onClick={handleAddToCalendar}
-              className={`${actionButtonClass} border-border-strong text-ink active:bg-paper`}
-            >
-              Add to Calendar
-            </button>
-            <button
-              type="button"
-              onClick={() => setMenuOpen((v) => !v)}
-              aria-expanded={menuOpen}
-              className={`${actionButtonClass} border-border-strong text-ink active:bg-paper`}
-            >
-              More
-            </button>
+              <AttendanceControls
+                event={event}
+                onSubmit={(status, name) => onAttendance(event, status, name)}
+              />
+            </div>
 
-            {menuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl border border-border-strong bg-surface p-1.5 shadow-lg">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onEdit(event);
-                    }}
-                    className={menuItemClass}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onTogglePin(event);
-                    }}
-                    className={menuItemClass}
-                  >
-                    {event.pinned ? "Unpin" : "Pin"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      if (cancelled) {
-                        onToggleStatus(event);
-                      } else {
-                        setConfirmingCancel(true);
-                      }
-                    }}
-                    className={`${menuItemClass} ${cancelled ? "text-going" : "text-cancelled"}`}
-                  >
-                    {cancelled ? "Restore" : "Cancel event"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleCopy()}
-                    className={menuItemClass}
-                  >
-                    {copyState === "copied" ? "Copied" : "Copy details"}
-                  </button>
-                  <div className="my-1 border-t border-border" />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setConfirmingDelete(true);
-                    }}
-                    className={`${menuItemClass} text-cancelled`}
-                  >
-                    Delete event
-                  </button>
-                </div>
-              </>
-            )}
+            <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-3.5">
+              <button
+                type="button"
+                onClick={handleShare}
+                className={`${actionButtonClass} border-accent text-accent active:bg-accent-soft`}
+              >
+                Share
+              </button>
+              <button
+                type="button"
+                onClick={handleAddToCalendar}
+                className={`${actionButtonClass} border-border-strong text-ink active:bg-paper`}
+              >
+                Add to Calendar
+              </button>
+              <button
+                type="button"
+                ref={moreButtonRef}
+                onClick={() => {
+                  if (menuOpen) {
+                    setMenuOpen(false);
+                    return;
+                  }
+                  const rect = moreButtonRef.current?.getBoundingClientRect();
+                  if (rect) {
+                    setMenuPosition({ top: rect.bottom + 4, left: Math.max(8, rect.right - 208) });
+                  }
+                  setMenuOpen(true);
+                }}
+                aria-expanded={menuOpen}
+                className={`${actionButtonClass} border-border-strong text-ink active:bg-paper`}
+              >
+                More
+              </button>
+            </div>
           </div>
         </div>
-      )}
+      </div>
+
+      {menuOpen &&
+        menuPosition &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+            <div
+              className="fixed z-50 w-52 rounded-xl border border-border-strong bg-surface p-1.5 shadow-lg"
+              style={{ top: menuPosition.top, left: menuPosition.left }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onEdit(event);
+                }}
+                className={menuItemClass}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onTogglePin(event);
+                }}
+                className={menuItemClass}
+              >
+                {event.pinned ? "Unpin" : "Pin"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  if (cancelled) {
+                    onToggleStatus(event);
+                  } else {
+                    setConfirmingCancel(true);
+                  }
+                }}
+                className={`${menuItemClass} ${cancelled ? "text-going" : "text-cancelled"}`}
+              >
+                {cancelled ? "Restore" : "Cancel event"}
+              </button>
+              <button type="button" onClick={() => void handleCopy()} className={menuItemClass}>
+                {copyState === "copied" ? "Copied" : "Copy details"}
+              </button>
+              <div className="my-1 border-t border-border" />
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setConfirmingDelete(true);
+                }}
+                className={`${menuItemClass} text-cancelled`}
+              >
+                Delete event
+              </button>
+            </div>
+          </>,
+          document.body
+        )}
 
       {confirmingCancel && (
         <ConfirmDialog
