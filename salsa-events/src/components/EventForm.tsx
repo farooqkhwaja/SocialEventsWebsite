@@ -27,7 +27,9 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
   const [type, setType] = useState<EventType>(initial?.type ?? "salsa");
   const [price, setPrice] = useState(initial?.price ?? "");
   const [url, setUrl] = useState(initial?.url ?? "");
-  const [description, setDescription] = useState(initial?.description ?? "");
+  const [description, setDescription] = useState(
+    initial?.description ?? ""
+  );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -42,23 +44,27 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
 
     setSubmitting(true);
 
-    const result = await onSave({
-      title: title.trim(),
-      date,
-      startTime,
-      endTime: endTime || undefined,
-      location: location.trim(),
-      address: address.trim() || undefined,
-      type,
-      price: price.trim() || undefined,
-      url: url.trim() || undefined,
-      description: description.trim() || undefined,
-    });
+    try {
+      const result = await onSave({
+        title: title.trim(),
+        date,
+        startTime,
+        endTime: endTime || undefined,
+        location: location.trim(),
+        address: address.trim() || undefined,
+        type,
+        price: price.trim() || undefined,
+        url: url.trim() || undefined,
+        description: description.trim() || undefined,
+      });
 
-    setSubmitting(false);
-
-    if (typeof result === "string") {
-      setError(result);
+      if (typeof result === "string") {
+        setError(result);
+      }
+    } catch {
+      setError("Something went wrong while saving the event.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -77,15 +83,13 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
     >
       <div
         className="
-          flex w-full flex-col
+          flex w-full min-w-0 flex-col
           max-h-[100dvh]
           overflow-hidden
           bg-surface
-          border border-border-strong
+          border border-border
           shadow-lg
-
           rounded-t-2xl
-
           sm:max-w-lg
           sm:max-h-[calc(100dvh-2rem)]
           sm:rounded-2xl
@@ -97,11 +101,11 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
           className="
             flex shrink-0 items-center justify-between
             border-b border-border
-            px-5 py-4
+            px-4 py-4
             sm:px-6 sm:py-5
           "
         >
-          <div>
+          <div className="min-w-0 pr-3">
             <h2
               id="event-form-title"
               className="font-display text-xl text-ink"
@@ -141,7 +145,7 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
             flex-1
             overflow-y-auto
             overscroll-contain
-            px-5 py-5
+            px-4 py-5
             sm:px-6 sm:py-6
           "
           style={{
@@ -149,6 +153,7 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
           }}
         >
           <div className="space-y-4">
+            {/* Event name */}
             <Field label="Event name" required>
               <input
                 type="text"
@@ -159,53 +164,64 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
               />
             </Field>
 
-            <div className="grid grid-cols-2 gap-3.5">
-              <Field label="Date" required>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className={inputClass}
-                />
-              </Field>
+            {/* Date + Type */}
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2.5 sm:gap-3.5">
+              <div className="min-w-0">
+                <Field label="Date" required>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className={inputClass}
+                  />
+                </Field>
+              </div>
 
-              <Field label="Type">
-                <select
-                  value={type}
-                  onChange={(e) =>
-                    setType(e.target.value as EventType)
-                  }
-                  className={inputClass}
-                >
-                  {TYPE_OPTIONS.map((t) => (
-                    <option key={t} value={t}>
-                      {EVENT_TYPE_LABELS[t]}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+              <div className="min-w-0">
+                <Field label="Type">
+                  <select
+                    value={type}
+                    onChange={(e) =>
+                      setType(e.target.value as EventType)
+                    }
+                    className={inputClass}
+                  >
+                    {TYPE_OPTIONS.map((t) => (
+                      <option key={t} value={t}>
+                        {EVENT_TYPE_LABELS[t]}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3.5">
-              <Field label="Start time" required>
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className={inputClass}
-                />
-              </Field>
+            {/* Start + End time */}
+            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2.5 sm:gap-3.5">
+              <div className="min-w-0">
+                <Field label="Start time" required>
+                  <input
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className={inputClass}
+                  />
+                </Field>
+              </div>
 
-              <Field label="End time">
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className={inputClass}
-                />
-              </Field>
+              <div className="min-w-0">
+                <Field label="End time">
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className={inputClass}
+                  />
+                </Field>
+              </div>
             </div>
 
+            {/* Location */}
             <Field label="Location" required>
               <input
                 type="text"
@@ -216,6 +232,7 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
               />
             </Field>
 
+            {/* Address */}
             <Field label="Address">
               <input
                 type="text"
@@ -226,28 +243,34 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
               />
             </Field>
 
-            <div className="grid grid-cols-2 gap-3.5">
-              <Field label="Price">
-                <input
-                  type="text"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  className={inputClass}
-                  placeholder="e.g. €10"
-                />
-              </Field>
+            {/* Price + URL */}
+            <div className="grid min-w-0 grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] gap-2.5 sm:grid-cols-2 sm:gap-3.5">
+              <div className="min-w-0">
+                <Field label="Price">
+                  <input
+                    type="text"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    className={inputClass}
+                    placeholder="e.g. €10"
+                  />
+                </Field>
+              </div>
 
-              <Field label="Event URL">
-                <input
-                  type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  className={inputClass}
-                  placeholder="https://..."
-                />
-              </Field>
+              <div className="min-w-0">
+                <Field label="Event URL">
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    className={inputClass}
+                    placeholder="https://..."
+                  />
+                </Field>
+              </div>
             </div>
 
+            {/* Description */}
             <Field label="Description">
               <textarea
                 value={description}
@@ -258,6 +281,7 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
               />
             </Field>
 
+            {/* Error */}
             {error && (
               <div
                 className="
@@ -279,7 +303,7 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
             shrink-0
             border-t border-border
             bg-surface
-            px-5 py-4
+            px-4 py-4
             pb-[calc(1rem+env(safe-area-inset-bottom))]
             sm:px-6 sm:py-4
             sm:pb-4
@@ -311,6 +335,7 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
               disabled={submitting}
               onClick={(e) => {
                 e.preventDefault();
+
                 const form = e.currentTarget
                   .closest("[role='dialog']")
                   ?.querySelector("form");
@@ -345,7 +370,7 @@ export function EventForm({ initial, onCancel, onSave }: EventFormProps) {
 }
 
 const inputClass =
-  "w-full min-h-[2.75rem] rounded-xl border border-border-strong bg-paper px-3.5 py-2 text-base text-ink outline-none transition-shadow focus:border-accent focus-visible:outline-2 focus-visible:outline-accent sm:text-sm";
+  "block w-full min-w-0 min-h-[2.75rem] appearance-none rounded-xl border border-border-strong bg-paper px-2.5 py-2 text-sm text-ink outline-none transition-shadow focus:border-accent focus-visible:outline-2 focus-visible:outline-accent sm:px-3.5 sm:text-sm";
 
 function Field({
   label,
@@ -357,11 +382,12 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className="mb-1.5 block text-sm text-muted">
         {label}
         {required ? " *" : ""}
       </span>
+
       {children}
     </label>
   );
