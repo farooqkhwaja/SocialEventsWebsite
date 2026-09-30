@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { EventModel } from "@/models/Event";
+import { attendeeKeyFrom } from "@/lib/serialize";
 
-interface RouteParams {
-  params: Promise<{ id: string }>;
-}
-
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(request: NextRequest) {
   try {
-    const { id } = await params;
+    // The key comes from a header rather than the URL so it never ends up in logs.
+    const key = attendeeKeyFrom(request);
     const body = await request.json().catch(() => ({}));
     const name = typeof body.name === "string" ? body.name.trim() : "";
 
-    if (!id) {
+    if (!key) {
       return NextResponse.json({ error: "Missing attendee identifier." }, { status: 400 });
     }
     if (!name) {
@@ -25,13 +23,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // "Going"/"Maybe"/"Not going" records show the new name too. Safe to run
     // more than once (idempotent) since it's a plain field overwrite.
     await EventModel.updateMany(
-      { "attendees.id": id },
+      { "attendees.id": key },
       { $set: { "attendees.$.name": name, "attendees.$.updatedAt": new Date() } }
     );
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("PATCH /api/attendees/[id] failed", error);
+    console.error("PATCH /api/attendees/me failed", error);
     return NextResponse.json(
       { error: "Could not update your name on existing events. Please try again." },
       { status: 500 }

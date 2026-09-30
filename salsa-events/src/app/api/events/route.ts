@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { EventModel } from "@/models/Event";
-import { serializeEvent } from "@/lib/serialize";
+import { attendeeKeyFrom, serializeEvent } from "@/lib/serialize";
 import { validateEventInput } from "@/lib/validateEvent";
 import { cleanupOldEvents } from "@/lib/cleanupOldEvents";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
 
@@ -18,7 +18,7 @@ export async function GET() {
     }
 
     const events = await EventModel.find().sort({ date: 1, startTime: 1 });
-    return NextResponse.json({ events: events.map(serializeEvent) });
+    return NextResponse.json({ events: events.map((e) => serializeEvent(e, attendeeKeyFrom(request))) });
   } catch (error) {
     console.error("GET /api/events failed", error);
     return NextResponse.json(

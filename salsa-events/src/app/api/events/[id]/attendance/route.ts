@@ -36,12 +36,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Event not found." }, { status: 404 });
     }
 
-    // Upsert: replace this person's existing entry (by local id, falling back to
-    // matching by name for the rare case where localStorage was cleared) rather
-    // than allowing duplicate rows for the same person.
-    const existingIndex = event.attendees.findIndex(
-      (a) => a.id === attendeeId || a.name.toLowerCase() === name.toLowerCase()
-    );
+    // Upsert this browser's own entry. Matching is by private key only -- never
+    // by name, otherwise anyone typing "Sarah" could overwrite Sarah's RSVP.
+    const existingIndex = event.attendees.findIndex((a) => a.id === attendeeId);
 
     const entry = { id: attendeeId, name, status, updatedAt: new Date() };
 
@@ -53,7 +50,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     await event.save();
 
-    return NextResponse.json({ event: serializeEvent(event) });
+    return NextResponse.json({ event: serializeEvent(event, attendeeId) });
   } catch (error) {
     console.error("POST /api/events/[id]/attendance failed", error);
     return NextResponse.json(
@@ -85,7 +82,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     event.attendees = event.attendees.filter((a) => a.id !== attendeeId) as typeof event.attendees;
     await event.save();
 
-    return NextResponse.json({ event: serializeEvent(event) });
+    return NextResponse.json({ event: serializeEvent(event, attendeeId) });
   } catch (error) {
     console.error("DELETE /api/events/[id]/attendance failed", error);
     return NextResponse.json(

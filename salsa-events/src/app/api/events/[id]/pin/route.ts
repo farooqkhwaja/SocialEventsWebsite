@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { EventModel } from "@/models/Event";
-import { serializeEvent } from "@/lib/serialize";
+import { attendeeKeyFrom, serializeEvent } from "@/lib/serialize";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -25,7 +25,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     existing.pinned = pinned;
     await existing.save();
 
-    return NextResponse.json({ event: serializeEvent(existing) });
+    return NextResponse.json({ event: serializeEvent(existing, attendeeKeyFrom(request)) });
   } catch (error) {
     console.error("PATCH /api/events/[id]/pin failed", error);
     return NextResponse.json(

@@ -2,11 +2,7 @@
 
 import { useState } from "react";
 import type { AttendanceStatus, EventDoc } from "@/types/event";
-import {
-  getLocalAttendeeId,
-  getLocalAttendeeName,
-  setLocalAttendeeName,
-} from "@/lib/localAttendee";
+import { getLocalAttendeeName, setLocalAttendeeName } from "@/lib/localAttendee";
 
 interface AttendanceControlsProps {
   event: EventDoc;
@@ -44,8 +40,7 @@ export function AttendanceControls({ event, onSubmit, onRemove }: AttendanceCont
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const localId = typeof window !== "undefined" ? getLocalAttendeeId() : "";
-  const mine = event.attendees.find((a) => a.id === localId);
+  const mine = event.attendees.find((a) => a.mine);
 
   function handleChoose(status: AttendanceStatus) {
     setError(null);

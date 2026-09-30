@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  getLocalAttendeeId,
-  getLocalAttendeeName,
-  setLocalAttendeeName,
-} from "@/lib/localAttendee";
+import { getLocalAttendeeName, setLocalAttendeeName } from "@/lib/localAttendee";
 import { renameAttendee } from "@/lib/api";
 
 interface NameSettingsProps {
@@ -34,7 +30,7 @@ export function NameSettings({ onRenamed }: NameSettingsProps) {
     try {
       // Updates the name on every event this browser already has an
       // attendance entry for, so past responses show the new name too.
-      await renameAttendee(getLocalAttendeeId(), trimmed);
+      await renameAttendee(trimmed);
       onRenamed?.();
     } catch {
       // Non-fatal: the local name is still updated and used going forward,

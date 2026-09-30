@@ -5,9 +5,10 @@ export type EventStatus = "active" | "cancelled";
 export type AttendanceStatus = "going" | "maybe" | "not_going";
 
 export interface Attendee {
-  id: string;
   name: string;
   status: AttendanceStatus;
+  /** True for the viewing browser's own entry. Attendee keys are never exposed. */
+  mine: boolean;
   updatedAt: string;
 }
 

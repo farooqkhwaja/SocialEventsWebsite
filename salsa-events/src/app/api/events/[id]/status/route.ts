@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { EventModel } from "@/models/Event";
-import { serializeEvent } from "@/lib/serialize";
+import { attendeeKeyFrom, serializeEvent } from "@/lib/serialize";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -30,7 +30,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Event not found." }, { status: 404 });
     }
 
-    return NextResponse.json({ event: serializeEvent(updated) });
+    return NextResponse.json({ event: serializeEvent(updated, attendeeKeyFrom(request)) });
   } catch (error) {
     console.error("PATCH /api/events/[id]/status failed", error);
     return NextResponse.json(

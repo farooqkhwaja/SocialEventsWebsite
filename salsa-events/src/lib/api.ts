@@ -1,4 +1,13 @@
 import type { AttendanceStatus, EventDoc, EventInput } from "@/types/event";
+import { getLocalAttendeeId } from "@/lib/localAttendee";
+import { ATTENDEE_KEY_HEADER } from "@/lib/serialize";
+
+/** fetch() that identifies this browser, so responses can mark its own RSVPs. */
+function apiFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(init.headers);
+  headers.set(ATTENDEE_KEY_HEADER, getLocalAttendeeId());
+  return fetch(url, { ...init, headers });
+}
 
 async function parseResponse<T>(res: Response): Promise<T> {
   const body = await res.json().catch(() => ({}));
@@ -9,13 +18,13 @@ async function parseResponse<T>(res: Response): Promise<T> {
 }
 
 export async function fetchEvents(): Promise<EventDoc[]> {
-  const res = await fetch("/api/events", { cache: "no-store" });
+  const res = await apiFetch("/api/events", { cache: "no-store" });
   const body = await parseResponse<{ events: EventDoc[] }>(res);
   return body.events;
 }
 
 export async function createEvent(input: EventInput): Promise<EventDoc> {
-  const res = await fetch("/api/events", {
+  const res = await apiFetch("/api/events", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
@@ -25,7 +34,7 @@ export async function createEvent(input: EventInput): Promise<EventDoc> {
 }
 
 export async function updateEvent(id: string, input: EventInput): Promise<EventDoc> {
-  const res = await fetch(`/api/events/${id}`, {
+  const res = await apiFetch(`/api/events/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
@@ -35,7 +44,7 @@ export async function updateEvent(id: string, input: EventInput): Promise<EventD
 }
 
 export async function togglePin(id: string, pinned: boolean): Promise<EventDoc> {
-  const res = await fetch(`/api/events/${id}/pin`, {
+  const res = await apiFetch(`/api/events/${id}/pin`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ pinned }),
@@ -48,7 +57,7 @@ export async function setEventStatus(
   id: string,
   status: "active" | "cancelled"
 ): Promise<EventDoc> {
-  const res = await fetch(`/api/events/${id}/status`, {
+  const res = await apiFetch(`/api/events/${id}/status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
@@ -63,7 +72,7 @@ export async function submitAttendance(
   name: string,
   status: AttendanceStatus
 ): Promise<EventDoc> {
-  const res = await fetch(`/api/events/${id}/attendance`, {
+  const res = await apiFetch(`/api/events/${id}/attendance`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ attendeeId, name, status }),
@@ -73,7 +82,7 @@ export async function submitAttendance(
 }
 
 export async function removeAttendance(id: string, attendeeId: string): Promise<EventDoc> {
-  const res = await fetch(`/api/events/${id}/attendance`, {
+  const res = await apiFetch(`/api/events/${id}/attendance`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ attendeeId }),
@@ -83,12 +92,12 @@ export async function removeAttendance(id: string, attendeeId: string): Promise<
 }
 
 export async function deleteEvent(id: string): Promise<void> {
-  const res = await fetch(`/api/events/${id}`, { method: "DELETE" });
+  const res = await apiFetch(`/api/events/${id}`, { method: "DELETE" });
   await parseResponse<{ success: boolean }>(res);
 }
 
-export async function renameAttendee(attendeeId: string, name: string): Promise<void> {
-  const res = await fetch(`/api/attendees/${attendeeId}`, {
+export async function renameAttendee(name: string): Promise<void> {
+  const res = await apiFetch("/api/attendees/me", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
