@@ -12,7 +12,7 @@ import {
   buildShareText,
   buildWhatsAppShareUrl,
 } from "@/lib/share";
-import { addEventToCalendar } from "@/lib/ics";
+import { addEventToCalendar, buildGoogleCalendarUrl } from "@/lib/ics";
 import {
   PALETTE_CLASSES,
   paletteColorFor,
@@ -325,6 +325,15 @@ export function EventCard({
               >
                 Add to Calendar
               </button>
+
+              <a
+                href={buildGoogleCalendarUrl(event)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${actionButtonClass} border-border-strong text-ink active:bg-paper`}
+              >
+                Google Calendar
+              </a>
 
               <button
                 type="button"

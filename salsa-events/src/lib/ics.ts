@@ -67,7 +67,8 @@ function foldLine(line: string): string {
   return result;
 }
 
-export function buildIcsContent(event: EventDoc): string {
+/** The event's start and end as UTC instants, rolling over for events past midnight. */
+function eventUtcRange(event: EventDoc): { start: Date; end: Date } {
   const start = zonedDateTimeToUtc(event.date, event.startTime);
   const end = event.endTime
     ? zonedDateTimeToUtc(
@@ -75,10 +76,38 @@ export function buildIcsContent(event: EventDoc): string {
         event.endTime
       )
     : new Date(start.getTime() + DEFAULT_EVENT_DURATION_MS);
+  return { start, end };
+}
 
-  const location = event.address ? `${event.location}, ${event.address}` : event.location;
+function eventLocation(event: EventDoc): string {
+  return event.address ? `${event.location}, ${event.address}` : event.location;
+}
 
-  const descriptionParts = [event.description, event.url].filter(Boolean) as string[];
+function eventDescription(event: EventDoc): string {
+  return [event.description, event.url].filter(Boolean).join("\n\n");
+}
+
+/**
+ * A Google Calendar "add event" link. Works from in-app browsers (WhatsApp,
+ * Instagram) where .ics files can't be handed off to a calendar app.
+ */
+export function buildGoogleCalendarUrl(event: EventDoc): string {
+  const { start, end } = eventUtcRange(event);
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: event.title,
+    dates: `${formatIcsUtc(start)}/${formatIcsUtc(end)}`,
+    location: eventLocation(event),
+  });
+  const details = eventDescription(event);
+  if (details) params.set("details", details);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+export function buildIcsContent(event: EventDoc): string {
+  const { start, end } = eventUtcRange(event);
+  const location = eventLocation(event);
+  const description = eventDescription(event);
 
   const lines = [
     "BEGIN:VCALENDAR",
@@ -94,8 +123,8 @@ export function buildIcsContent(event: EventDoc): string {
     `LOCATION:${escapeIcsText(location)}`,
   ];
 
-  if (descriptionParts.length > 0) {
-    lines.push(`DESCRIPTION:${escapeIcsText(descriptionParts.join("\n\n"))}`);
+  if (description) {
+    lines.push(`DESCRIPTION:${escapeIcsText(description)}`);
   }
   if (event.url) {
     lines.push(`URL:${event.url}`);
