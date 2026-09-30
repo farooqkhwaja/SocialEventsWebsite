@@ -1,5 +1,4 @@
 "use client";
-import { PausedPage } from "@/components/PausedPage";
 import { useMemo, useState } from "react";
 import type { EventDoc } from "@/types/event";
 import { AppHeader } from "@/components/AppHeader";

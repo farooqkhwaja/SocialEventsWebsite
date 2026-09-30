@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import type { AttendanceStatus, EventDoc } from "@/types/event";
 import {
@@ -12,11 +12,7 @@ import {
   buildShareText,
   buildWhatsAppShareUrl,
 } from "@/lib/share";
-import {
-  buildIcsContent,
-  downloadIcsFile,
-  icsFilenameFor,
-} from "@/lib/ics";
+import { addEventToCalendar } from "@/lib/ics";
 import {
   PALETTE_CLASSES,
   paletteColorFor,
@@ -71,13 +67,17 @@ export function EventCard({
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  useEffect(() => {
+  // Reset menus/dialogs when the card collapses. Adjusting state during render
+  // (rather than in an effect) avoids an extra render pass.
+  const [prevExpanded, setPrevExpanded] = useState(expanded);
+  if (expanded !== prevExpanded) {
+    setPrevExpanded(expanded);
     if (!expanded) {
       setMenuOpen(false);
       setConfirmingCancel(false);
       setConfirmingDelete(false);
     }
-  }, [expanded]);
+  }
 
   const cancelled = event.status === "cancelled";
 
@@ -148,13 +148,6 @@ export function EventCard({
     }
   }
 
-  function handleAddToCalendar() {
-    const content = buildIcsContent(event);
-    downloadIcsFile(
-      icsFilenameFor(event.title),
-      content
-    );
-  }
 
   return (
     <article
@@ -327,7 +320,7 @@ export function EventCard({
 
               <button
                 type="button"
-                onClick={handleAddToCalendar}
+                onClick={() => addEventToCalendar(event)}
                 className={`${actionButtonClass} border-border-strong text-ink active:bg-paper`}
               >
                 Add to Calendar

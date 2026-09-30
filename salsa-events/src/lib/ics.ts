@@ -1,4 +1,4 @@
-import { DEFAULT_EVENT_DURATION_MS, toDateTime } from "@/lib/date";
+import { DEFAULT_EVENT_DURATION_MS, endsNextDay, nextDate, toDateTime } from "@/lib/date";
 import type { EventDoc } from "@/types/event";
 
 /**
@@ -70,7 +70,10 @@ function foldLine(line: string): string {
 export function buildIcsContent(event: EventDoc): string {
   const start = zonedDateTimeToUtc(event.date, event.startTime);
   const end = event.endTime
-    ? zonedDateTimeToUtc(event.date, event.endTime)
+    ? zonedDateTimeToUtc(
+        endsNextDay(event.startTime, event.endTime) ? nextDate(event.date) : event.date,
+        event.endTime
+      )
     : new Date(start.getTime() + DEFAULT_EVENT_DURATION_MS);
 
   const location = event.address ? `${event.location}, ${event.address}` : event.location;
@@ -111,24 +114,21 @@ function isIOS(): boolean {
   return iOSDevice || iPadOS13;
 }
 
-/** Triggers an .ics download/open in a way that works on iOS Safari and desktop browsers. */
-export function downloadIcsFile(filename: string, content: string): void {
-  const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-
+/** Opens the event in the device's calendar app, or downloads an .ics file on desktop. */
+export function addEventToCalendar(event: EventDoc): void {
   if (isIOS()) {
-    // iOS Safari doesn't support the `download` attribute, and data: URIs
-    // for text/calendar are unreliable there (often silently do nothing).
-    // Opening the object URL directly lets Safari recognize the
-    // text/calendar content type and hand off to Calendar.app.
-    const opened = window.open(url, "_blank");
-    if (!opened) {
-      window.location.href = url;
-    }
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    // iOS ignores blob: URLs in home-screen web apps and in-app browsers.
+    // Navigating to a real text/calendar response makes iOS show the
+    // "Add to Calendar" sheet for Apple Calendar. This must be a full browser
+    // navigation to a file, not a client-side route change.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.href = `/api/events/${event._id}/ics`;
     return;
   }
 
+  const blob = new Blob([buildIcsContent(event)], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const filename = icsFilenameFor(event.title);
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;

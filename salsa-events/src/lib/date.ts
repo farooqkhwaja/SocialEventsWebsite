@@ -119,9 +119,28 @@ export function formatShortDate(date: string): string {
 /** Assumed event length when no end time is given (used for "is this past?" and calendar export). */
 export const DEFAULT_EVENT_DURATION_MS = 3 * 60 * 60 * 1000;
 
+/** True when the end time is earlier than the start time, e.g. 22:00 - 02:00. */
+export function endsNextDay(startTime: string, endTime?: string): boolean {
+  // "HH:mm" strings are zero-padded, so string comparison matches time order.
+  return !!endTime && endTime < startTime;
+}
+
+/** "YYYY-MM-DD" for the day after the given date. */
+export function nextDate(date: string): string {
+  const d = toDateOnly(date);
+  d.setDate(d.getDate() + 1);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** When the event ends, rolling over to the next day for events past midnight. */
+export function eventEndDateTime(date: string, startTime: string, endTime?: string): Date {
+  if (!endTime) {
+    return new Date(toDateTime(date, startTime).getTime() + DEFAULT_EVENT_DURATION_MS);
+  }
+  return toDateTime(endsNextDay(startTime, endTime) ? nextDate(date) : date, endTime);
+}
+
 export function isPastEvent(date: string, startTime: string, endTime?: string): boolean {
-  const reference = endTime
-    ? toDateTime(date, endTime)
-    : new Date(toDateTime(date, startTime).getTime() + DEFAULT_EVENT_DURATION_MS);
-  return reference.getTime() < Date.now();
+  return eventEndDateTime(date, startTime, endTime).getTime() < Date.now();
 }
