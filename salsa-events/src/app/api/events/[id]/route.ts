@@ -19,8 +19,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     await connectToDatabase();
-    const updated = await EventModel.findByIdAndUpdate(
-      id,
+    const updated = await EventModel.findOneAndUpdate(
+      { _id: { $eq: id } },
       { $set: result.data },
       { new: true }
     );
@@ -43,7 +43,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     await connectToDatabase();
-    const deleted = await EventModel.findByIdAndDelete(id);
+    const deleted = await EventModel.findOneAndDelete({ _id: { $eq: id } });
 
     if (!deleted) {
       return NextResponse.json({ error: "Event not found." }, { status: 404 });
