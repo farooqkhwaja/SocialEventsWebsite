@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed.ts",
-    "seed-events": "tsx scripts/seed-events.ts"
+    "seed-events": "tsx scripts/seed-events.ts",
+    "seed-festivals": "tsx scripts/seed-festivals.ts"
   },
   "dependencies": {
     "mongodb": "^7.6.0",

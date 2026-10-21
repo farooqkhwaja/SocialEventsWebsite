@@ -7,7 +7,7 @@ import {
   EVENT_TYPE_COLOR_CLASSES,
   EVENT_TYPE_LABELS,
 } from "@/types/event";
-import { friendlyDateLabel, formatShortDate } from "@/lib/date";
+import { friendlyDateLabel, formatShortDateRange } from "@/lib/date";
 import {
   buildShareText,
   buildWhatsAppShareUrl,
@@ -28,6 +28,9 @@ interface EventCardProps {
   onTogglePin: (event: EventDoc) => void;
   onToggleStatus: (event: EventDoc) => void;
   onDelete: (event: EventDoc) => void;
+  onDeleteSeries: (event: EventDoc) => void;
+  /** How many dates the event's repeating series still has (1 when not repeating). */
+  seriesSize: number;
   onAttendance: (
     event: EventDoc,
     status: AttendanceStatus,
@@ -59,6 +62,8 @@ export function EventCard({
   onTogglePin,
   onToggleStatus,
   onDelete,
+  onDeleteSeries,
+  seriesSize,
   onAttendance,
   onRemoveAttendance,
 }: EventCardProps) {
@@ -66,6 +71,7 @@ export function EventCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmingSeriesDelete, setConfirmingSeriesDelete] = useState(false);
 
   // Reset menus/dialogs when the card collapses. Adjusting state during render
   // (rather than in an effect) avoids an extra render pass.
@@ -76,25 +82,25 @@ export function EventCard({
       setMenuOpen(false);
       setConfirmingCancel(false);
       setConfirmingDelete(false);
+      setConfirmingSeriesDelete(false);
     }
   }
 
   const cancelled = event.status === "cancelled";
 
-  const { eyebrow, detail } = friendlyDateLabel(
-    event.date,
-    event.startTime,
-    event.endTime
-  );
+  const { eyebrow, detail } = friendlyDateLabel(event);
 
-  const isToday = eyebrow === "TODAY";
-  const isTomorrow = eyebrow === "TOMORROW";
+  const isToday = eyebrow === "TODAY" || eyebrow === "ON NOW";
+  const isTomorrow = eyebrow === "TOMORROW" || eyebrow === "STARTS TOMORROW";
 
-  const rowDateLabel = isToday
-    ? "Today"
-    : isTomorrow
-      ? "Tomorrow"
-      : formatShortDate(event.date);
+  const rowDateLabel =
+    eyebrow === "ON NOW"
+      ? "On now"
+      : eyebrow === "TODAY"
+        ? "Today"
+        : eyebrow === "TOMORROW"
+          ? "Tomorrow"
+          : formatShortDateRange(event);
 
   const palette = PALETTE_CLASSES[paletteColorFor(event._id)];
 
@@ -429,8 +435,21 @@ export function EventCard({
                 }}
                 className={`${menuItemClass} text-cancelled`}
               >
-                Delete event
+                {seriesSize > 1 ? "Delete this date" : "Delete event"}
               </button>
+
+              {seriesSize > 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setConfirmingSeriesDelete(true);
+                  }}
+                  className={`${menuItemClass} text-cancelled`}
+                >
+                  Delete all {seriesSize} dates
+                </button>
+              )}
 
               <div className="my-1 border-t border-border sm:hidden" />
 
@@ -472,6 +491,18 @@ export function EventCard({
           onConfirm={() => {
             setConfirmingDelete(false);
             onDelete(event);
+          }}
+        />
+      )}
+
+      {confirmingSeriesDelete && (
+        <ConfirmDialog
+          message={`Delete all ${seriesSize} dates of this repeating event? This cannot be undone.`}
+          confirmLabel="Delete all"
+          onCancel={() => setConfirmingSeriesDelete(false)}
+          onConfirm={() => {
+            setConfirmingSeriesDelete(false);
+            onDeleteSeries(event);
           }}
         />
       )}

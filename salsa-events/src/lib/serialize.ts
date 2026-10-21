@@ -19,6 +19,7 @@ export function serializeEvent(doc: EventHydratedDocument, viewerKey = ""): Even
     _id: obj._id.toString(),
     title: obj.title,
     date: obj.date,
+    endDate: obj.endDate,
     startTime: obj.startTime,
     endTime: obj.endTime,
     location: obj.location,
@@ -29,6 +30,7 @@ export function serializeEvent(doc: EventHydratedDocument, viewerKey = ""): Even
     description: obj.description,
     pinned: obj.pinned,
     status: obj.status,
+    seriesId: obj.seriesId,
     attendees: (obj.attendees || []).map((a) => ({
       name: a.name,
       status: a.status,

@@ -11,7 +11,8 @@ export interface AttendeeSubdoc {
 export interface EventSchemaFields {
   title: string;
   date: string;
-  startTime: string;
+  endDate?: string;
+  startTime?: string;
   endTime?: string;
   location: string;
   address?: string;
@@ -21,6 +22,7 @@ export interface EventSchemaFields {
   description?: string;
   pinned: boolean;
   status: EventStatus;
+  seriesId?: string;
   attendees: AttendeeSubdoc[];
   createdAt: Date;
   updatedAt: Date;
@@ -46,13 +48,15 @@ const EventSchema = new Schema<EventSchemaFields>(
   {
     title: { type: String, required: true, trim: true },
     date: { type: String, required: true },
-    startTime: { type: String, required: true },
+    endDate: { type: String },
+    // Optional: festivals and other all-day events have no start time.
+    startTime: { type: String },
     endTime: { type: String },
     location: { type: String, required: true, trim: true },
     address: { type: String },
     type: {
       type: String,
-      enum: ["salsa", "bachata", "salsa_bachata", "other"],
+      enum: ["salsa", "bachata", "salsa_bachata", "other", "festival"],
       required: true,
       default: "salsa",
     },
@@ -65,6 +69,7 @@ const EventSchema = new Schema<EventSchemaFields>(
       enum: ["active", "cancelled"],
       default: "active",
     },
+    seriesId: { type: String, index: true },
     attendees: { type: [AttendeeSchema], default: [] },
   },
   { timestamps: true }

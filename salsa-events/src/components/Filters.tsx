@@ -10,6 +10,9 @@ interface FiltersProps {
   onTypeChange: (type: TypeFilter) => void;
   search: string;
   onSearchChange: (value: string) => void;
+  /** Dance-style chips; hidden on the Festivals tab. */
+  showTypes?: boolean;
+  searchPlaceholder?: string;
 }
 
 const TYPE_OPTIONS: { value: TypeFilter; label: string }[] = [
@@ -20,31 +23,40 @@ const TYPE_OPTIONS: { value: TypeFilter; label: string }[] = [
   { value: "other", label: EVENT_TYPE_FILTER_LABELS.other },
 ];
 
-export function Filters({ activeType, onTypeChange, search, onSearchChange }: FiltersProps) {
+export function Filters({
+  activeType,
+  onTypeChange,
+  search,
+  onSearchChange,
+  showTypes = true,
+  searchPlaceholder = "Search events or locations",
+}: FiltersProps) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
-        {TYPE_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onTypeChange(opt.value)}
-            className={`min-h-[2.5rem] shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-              activeType === opt.value
-                ? "border-accent bg-accent text-paper shadow-sm"
-                : "border-border-strong bg-surface text-ink active:bg-paper"
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-      
+      {showTypes && (
+        <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+          {TYPE_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onTypeChange(opt.value)}
+              className={`min-h-[2.5rem] shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                activeType === opt.value
+                  ? "border-accent bg-accent text-paper shadow-sm"
+                  : "border-border-strong bg-surface text-ink active:bg-paper"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <input
         type="search"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="Search events or locations"
+        placeholder={searchPlaceholder}
         className="w-full min-h-[2.75rem] rounded-xl border border-border-strong bg-surface px-4 py-2 text-base text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent sm:max-w-xs sm:text-sm"
       />
     </div>

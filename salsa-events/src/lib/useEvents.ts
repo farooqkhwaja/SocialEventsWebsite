@@ -60,8 +60,9 @@ export function useEvents() {
         const updated = await updateEvent(editingId, input);
         upsertLocal(updated);
       } else {
+        // A repeating event comes back as one event per date.
         const created = await createEvent(input);
-        upsertLocal(created);
+        setEvents((prev) => [...prev, ...created]);
       }
     } catch (err) {
       return err instanceof Error ? err.message : "Could not save the event.";
@@ -96,6 +97,16 @@ export function useEvents() {
     }
   }
 
+  async function deleteSeriesFor(event: EventDoc) {
+    if (!event.seriesId) return;
+    try {
+      await deleteEvent(event._id, { wholeSeries: true });
+      setEvents((prev) => prev.filter((e) => e.seriesId !== event.seriesId));
+    } catch {
+      // Non-fatal: the UI simply keeps showing the series if deletion failed.
+    }
+  }
+
   async function submitAttendanceFor(event: EventDoc, status: AttendanceStatus, name: string) {
     const updated = await submitAttendance(event._id, getLocalAttendeeId(), name, status);
     upsertLocal(updated);
@@ -115,6 +126,7 @@ export function useEvents() {
     togglePinFor,
     toggleStatusFor,
     deleteEventFor,
+    deleteSeriesFor,
     submitAttendanceFor,
     removeAttendanceFor,
   };

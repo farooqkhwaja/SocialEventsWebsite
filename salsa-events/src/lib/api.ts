@@ -23,14 +23,15 @@ export async function fetchEvents(): Promise<EventDoc[]> {
   return body.events;
 }
 
-export async function createEvent(input: EventInput): Promise<EventDoc> {
+/** Returns every created event: one, or one per date for a repeating event. */
+export async function createEvent(input: EventInput): Promise<EventDoc[]> {
   const res = await apiFetch("/api/events", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  const body = await parseResponse<{ event: EventDoc }>(res);
-  return body.event;
+  const body = await parseResponse<{ events: EventDoc[] }>(res);
+  return body.events;
 }
 
 export async function updateEvent(id: string, input: EventInput): Promise<EventDoc> {
@@ -91,8 +92,12 @@ export async function removeAttendance(id: string, attendeeId: string): Promise<
   return body.event;
 }
 
-export async function deleteEvent(id: string): Promise<void> {
-  const res = await apiFetch(`/api/events/${id}`, { method: "DELETE" });
+export async function deleteEvent(
+  id: string,
+  { wholeSeries = false }: { wholeSeries?: boolean } = {}
+): Promise<void> {
+  const query = wholeSeries ? "?scope=series" : "";
+  const res = await apiFetch(`/api/events/${id}${query}`, { method: "DELETE" });
   await parseResponse<{ success: boolean }>(res);
 }
 

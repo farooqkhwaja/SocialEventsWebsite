@@ -1,4 +1,4 @@
-import { DEFAULT_EVENT_DURATION_MS, endsNextDay, nextDate, toDateTime } from "@/lib/date";
+import { addDays, eventEnd, lastDate, toDateTime } from "@/lib/date";
 import type { EventDoc } from "@/types/event";
 
 /**
@@ -67,16 +67,22 @@ function foldLine(line: string): string {
   return result;
 }
 
-/** The event's start and end as UTC instants, rolling over for events past midnight. */
-function eventUtcRange(event: EventDoc): { start: Date; end: Date } {
-  const start = zonedDateTimeToUtc(event.date, event.startTime);
-  const end = event.endTime
-    ? zonedDateTimeToUtc(
-        endsNextDay(event.startTime, event.endTime) ? nextDate(event.date) : event.date,
-        event.endTime
-      )
-    : new Date(start.getTime() + DEFAULT_EVENT_DURATION_MS);
-  return { start, end };
+/**
+ * Start and end in calendar format. Timed events are UTC instants
+ * ("20261003T200000Z"); all-day events are plain dates ("20270701"), with
+ * the end date exclusive as both .ics and Google Calendar require.
+ */
+function calendarRange(event: EventDoc): { allDay: boolean; start: string; end: string } {
+  if (!event.startTime) {
+    const compact = (date: string) => date.replaceAll("-", "");
+    return { allDay: true, start: compact(event.date), end: compact(addDays(lastDate(event), 1)) };
+  }
+  const end = eventEnd(event);
+  return {
+    allDay: false,
+    start: formatIcsUtc(zonedDateTimeToUtc(event.date, event.startTime)),
+    end: formatIcsUtc(zonedDateTimeToUtc(end.date, end.time)),
+  };
 }
 
 function eventLocation(event: EventDoc): string {
@@ -92,11 +98,11 @@ function eventDescription(event: EventDoc): string {
  * Instagram) where .ics files can't be handed off to a calendar app.
  */
 export function buildGoogleCalendarUrl(event: EventDoc): string {
-  const { start, end } = eventUtcRange(event);
+  const { start, end } = calendarRange(event);
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: event.title,
-    dates: `${formatIcsUtc(start)}/${formatIcsUtc(end)}`,
+    dates: `${start}/${end}`,
     location: eventLocation(event),
   });
   const details = eventDescription(event);
@@ -105,7 +111,8 @@ export function buildGoogleCalendarUrl(event: EventDoc): string {
 }
 
 export function buildIcsContent(event: EventDoc): string {
-  const { start, end } = eventUtcRange(event);
+  const { allDay, start, end } = calendarRange(event);
+  const valueType = allDay ? ";VALUE=DATE" : "";
   const location = eventLocation(event);
   const description = eventDescription(event);
 
@@ -117,8 +124,8 @@ export function buildIcsContent(event: EventDoc): string {
     "BEGIN:VEVENT",
     `UID:${event._id}@salsa-events.local`,
     `DTSTAMP:${formatIcsUtc(new Date())}`,
-    `DTSTART:${formatIcsUtc(start)}`,
-    `DTEND:${formatIcsUtc(end)}`,
+    `DTSTART${valueType}:${start}`,
+    `DTEND${valueType}:${end}`,
     `SUMMARY:${escapeIcsText(event.title)}`,
     `LOCATION:${escapeIcsText(location)}`,
   ];
