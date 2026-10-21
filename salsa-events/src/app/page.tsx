@@ -99,7 +99,8 @@ export default function Home() {
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return events.filter((event) => {
-      if (isFestival(event) !== (tab === "festivals")) return false;
+      // The festivals tab shows only festivals; the events tab shows everything.
+      if (tab === "festivals" && !isFestival(event)) return false;
       if (tab === "events" && typeFilter !== "all" && event.type !== typeFilter) return false;
       if (!query) return true;
       return (
