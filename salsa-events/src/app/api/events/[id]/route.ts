@@ -38,8 +38,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     );
 
     await connectToDatabase();
-    const updated = await EventModel.findByIdAndUpdate(
-      id,
+    const updated = await EventModel.findOneAndUpdate(
+      { _id: { $eq: id } },
       { $set: fields, ...(Object.keys(unset).length > 0 ? { $unset: unset } : {}) },
       { new: true }
     );
@@ -62,13 +62,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-
     if (!isValidObjectId(id)) {
       return NextResponse.json({ error: "Event not found." }, { status: 404 });
     }
 
     await connectToDatabase();
-    const event = await EventModel.findById(id);
+    const event = await EventModel.findOne({ _id: { $eq: id } });
 
     if (!event) {
       return NextResponse.json({ error: "Event not found." }, { status: 404 });

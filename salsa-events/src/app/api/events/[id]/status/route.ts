@@ -21,7 +21,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     await connectToDatabase();
     const updated = await EventModel.findByIdAndUpdate(
-      id,
+      String(id),
       { $set: { status: body.status } },
       { new: true }
     );
